@@ -1,0 +1,4 @@
+bool char class const double enum float int long short signed struct union unsigned void volatile wchar_t auto extern inline register static friend private public protected break case catch continue default do else for goto if return switch throw try while delete false new sizeof true asm explicit namespace operator template this typedef typename using virtual end 
+
+ 
+
