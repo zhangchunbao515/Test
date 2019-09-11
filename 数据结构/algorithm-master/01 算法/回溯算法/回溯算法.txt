@@ -1,0 +1,685 @@
+结合几个例题来分析。
+
+一、给出n对括号，求括号排列的所有可能性。
+
+这是一个很经典的回溯法问题，代码如下，结合代码，对上面总结出的特点进行分析。
+
+public class BackTracking {
+	public static void main(String[] args) {
+	int n=3;
+	int leftnum=n,rightnum=n;//左括号和右括号都各有n个
+	ArrayList<String> results=new ArrayList<String>();//用于存放解空间
+	parentheses("", results, leftnum, rightnum);
+	for(String s:results)
+		System.out.println(s);
+	}
+	public static void parentheses(String sublist, ArrayList<String> results, int leftnum, int rightnum){
+		if(leftnum==0&&rightnum==0)//结束
+			results.add(sublist);
+		if(rightnum>leftnum)//选择和条件。对于不同的if顺序，输出的结果顺序是不一样的，但是构成一样的解空间
+			parentheses(sublist+")", results, leftnum, rightnum-1);
+		if(leftnum>0)
+			parentheses(sublist+"(", results, leftnum-1, rightnum);
+	}
+}
+输出如下：
+
+()()()
+()(())
+(())()
+(()())
+
+((()))
+
+对于回溯法来说，必须齐备的三要素：
+
+1、选择。在这个例子中，解就是一个合法的括号组合形式，而选择无非是放入左括号，还是放入右括号；
+
+2、条件。在这个例子中，选择是放入左括号，还是放入右括号，是有条件约束的，不是随便放的。而这个约束就是括号的数量。只有剩下的右括号比左括号多，才能放右括号。只有左括号数量大于0才能放入左括号。这里if的顺序会影响输出的顺序，但是不影响最终解；
+
+3、结束。这里的结束条件很显然就是，左右括号都放完了。
+
+回溯法中，参数的设计是一大难点，也是很重要的地方。而递归参数的设计要注意的四个点：
+
+1、用了一个空字符串来作为临时变量存储不完整解；
+
+2、用了一个ArrayList<String> results来存放符合要求的解。在后面可以看到，不一定要这样做，也可以直接打印结果；
+
+3、把leftnum和rightnum传入给递归函数，这样可以用于判断结束条件；
+
+4、这个例子不明显。但是事实上也符合这个条件。可以仔细观察代码，可以发现由于使用了两个if，所以当一次递归退出后，例如从第一个if退出，第二个递归直接递归的是leftnum-1和rightnum，这其实是已经恢复状态了（如果没有恢复状态，那就是leftnum, rightnum-1）。因此不需要人为让他恢复状态。但是恢复状态这点是很重要的，因为回溯法，顾名思义要回溯，不恢复状态，怎么回溯呢。
+
+		if(rightnum>leftnum)//选择和条件。对于不同的if顺序，输出的结果顺序是不一样的，但是构成一样的解空间
+			parentheses(sublist+")", results, leftnum, rightnum-1);
+		if(leftnum>0)
+			parentheses(sublist+"(", results, leftnum-1, rightnum);
+从后面的例子可以看出，对于一些题，是必须要恢复递归前状态的。
+二、给出一个不重复大于0数字的数组和一个目标，求数组中数的组合的和得到该目标（数字不同组合顺序当做一个解）。
+
+public class BackTracking {
+	public static void main(String[] args){
+		int[] num=new int[]{2,3,7,6};
+		int target=9;
+		find(num, target, "");
+	}
+	public static void find(int[] num, int target, String temp){
+		if(issolution(temp,target)){
+			System.out.println(temp);
+			return;
+		}
+		for(int i=0;i<num.length;i++){
+			if(num[i]!=-1){//如果取过这个数字了，就置为-1
+				int k=num[i];
+				num[i]=-1;
+				find(num, target, temp+k);
+				num[i]=k;
+			}
+		}
+}
+	public static boolean issolution(String temp, int target){
+		boolean result=false;
+		int count=0;
+		for(int i=0;i<temp.length();i++){
+			count=count+Integer.valueOf(temp.charAt(i)+"");
+		}
+		if(count==target)
+			result=true;
+		return result;
+	}
+}
+这题不同的是，它在递归后，必须把数组恢复。这也是参数的特征的第四点所说的内容。
+
+三、给一个字符串，给出他的所有排列
+
+public class BackTracking {
+	public static void main(String[] args){
+		String s="abc";
+		pailie(s,"");
+	}
+	public static void pailie(String s, String temp){//参数设计地尽量地简洁
+		if(s.length()==0){
+			System.out.println(temp);
+			return;
+		}
+		for(int i=0;i<s.length();i++){
+			String news=s.substring(0, i)+s.substring(i+1,s.length());//去掉String中的某个字母
+			pailie(news, temp+s.charAt(i));
+		}
+	}
+}
+
+
+
+
+回溯算法
+
+　　1.回溯算法就是一种有组织的系统最优化搜索技术，可以看作蛮力法穷举搜索的改进。回溯法常常可以避免搜索所有可能的解，所以它适用于求解组织数量较大的问题。
+
+
+
+　　2.首先我们先了解一下一个基本概念“解空间树”：问题的解空间一般使用解空间树的方式来组织，树的根节点位于第1层，表示搜索的初始状态，依次向下排列。
+
+
+
+　　3.解空间树的动态搜索：在搜索至树中任一节点时，先判断该节点对应的部分是否是满足约束条件，或者是否超出目标函数的界，也就是判断该节点是否包含问题的最优解。如果肯定不包含，则跳过对该节点为根的子树的搜索，即所谓的剪枝；否则，进入该节点为根的子树，继续按照深度优先策略搜索。（这也是为什么回溯可以避免搜索所有的解）
+
+
+
+　　4.在搜索过程中，通常采用两种策略避免无效搜索：
+
+      （1）用约束条件剪除得不到的可行解的子树
+
+　　　（2）用目标函数剪取得不到的最优解的子树
+
+　　  （这两种方式统称为：剪枝函数）
+
+
+
+　　5.在用回溯法求解问题时，常常遇到两种典型的解空间树：
+
+　　（1）子集树：但所有的问题是从n个元素的集合中找出满足某种性质的子集时，相应的解空间树成为子集树
+
+　　（2）排列树：当所给出问题是确定n个元素满足某种性质的排列时，相应的解空间称为排列树。          
+
+                                                                         
+
+　　6.回溯法的一般步骤：
+
+　　（1）设置初始化的方案（给变量赋初始值，读入已知数据等）
+
+　　（2）变换方式去试探，若全部试完侧转（7）
+
+　　（3）判断此法是否成功（通过约束函数），不成功则转（2）
+
+　　（4）试探成功则前进一步再试探
+
+　　（5）正确方案还是未找到则转（2）
+
+　　（6）以找到一种方案则记录并打印
+
+　　（7）退回一步（回溯），若未退到头则转（2）
+
+　　（8）已退到头则结束或打印无解
+
+
+
+    7.回溯法的优点在于其结构明确，可读性强，易于理解，而且通过对问题的分析可以大大提高运行效率。
+
+
+
+
+ 皇后问题：
+
+    N皇后问题是指在N*N的棋盘上放置N个皇后，使这N个皇后无法吃掉对方（也就是说两两不在一行，不在一列，也不在对角线上）。经典的是8皇后问题，这里我们为了简单，以4皇后为例。
+
+    首先利用回溯算法，先给第一个皇后安排位置，如下图所示，安排在（1,1）然后给第二个皇后安排位置，可知（2,1），（2,2）都会产生冲突，因此可以安排在（2,3），然后安排第三个皇后，在第三行没有合适的位置，因此回溯到第二个皇后，重新安排第二个皇后的位置，安排到（2,4），然后安排第三个皇后到（3,2），安排第四个皇后有冲突，因此要回溯到第三个皇后，可知第三个皇后也就仅此一个位置，无处可改，故继续向上回溯到第二个皇后，也没有位置可更改，因此回溯到第一个皇后，更改第一个皇后的位置，继续上面的做法，直至找到所有皇后的位置，如下图所示。
+
+    这里为什么我们用4皇后做例子呢？因为3皇后是无解的。同时我们也可以看到回溯算法虽然也是Brute-Force，但是它可以避免去搜索很多的不可能的情况，因此算法是优于Brute-Force的。     
+
+public class NQueensII {  
+    int[] x;//当前解    
+    int N;//皇后个数  
+     int sum = 0;//当前已找到的可行方案数  
+    public int totalNQueens(int n) {  
+        N = n;  
+        x = new int[N+1];  
+        backTrace(1);  
+        return sum;  
+    }  
+    /** 
+     * col行这个点，x[col]列这个点，与已经存在的几个皇后，是否符合要求，放到这个位置上， 
+     * @param col 
+     * @return 
+     */  
+    private boolean place(int col){  
+        for(int i = 1; i < col; i++){  
+            if(Math.abs(col - i)==Math.abs(x[col]-x[i])||x[col]==x[i]){  
+                return false;  
+            }  
+        }  
+        return true;  
+    }  
+    private void backTrace(int t) {  
+        if(t>N){  
+            sum++;  
+        }else {  
+            //第t行，遍历所有的节点  
+            for(int j = 1; j <= N; j++) {  
+                 x[t] = j ;  
+                 //如果第j个节点可以放下皇后  
+                if(place(t)){  
+                    //接着放下一个  
+                    backTrace(t+1);  
+                }  
+            }  
+        }  
+          
+    }  
+    public static void main(String[] args) {  
+        NQueensII n = new NQueensII();  
+        System.out.println(n.totalNQueens(8));  
+    }  
+} 
+
+#include <stdio.h>
+#include <windows.h>
+ 
+#define N 8
+#define abs(x) (((x)>=0)?(x):-(x)) 
+int col[N+1];
+int count=0;
+ 
+void Output();
+void Queen(int i,int n);
+ 
+void main()
+{
+	int i;
+	for(i=1;i<=N;i++)
+	{
+		col[1] = i;
+		Queen(2,N);
+	}
+	printf("%d\n",count);
+	system("pause");
+}
+ 
+void Queen(int i,int n)
+{
+	if(i>n)
+		Output();
+	else
+	{
+		int j;
+		for(j=1;j<=N;j++)
+		{
+			col[i]=j;
+			int k=1; //已经安排了位置的皇后的游标指示
+			while(k<i)//比较现在的皇后与之前的皇后有没有冲突
+			{	
+				if((col[k]-col[i])*(abs(col[k]-col[i]) - abs(k-i))!=0)//冲突条件
+				{
+					k++;
+					if(k==i)
+						Queen(i+1,n);
+				}
+				else
+					break;
+			}
+		}
+	}
+}
+void Output()
+{
+	int i;
+	count++;
+	for(i=1;i<=N;i++)
+	{
+		printf("(%d,%d)\n",i,col[i]);
+	}
+	printf("\n");
+}
+
+
+
+最大 k 乘积问题：
+
+     设I是一个 n 位十进制整数。如果将 I 划分为 k 段，则可得到    k 个整数。这 k 个整数的乘积称为 I 的一个 k 乘积。试设计一个算法，对于给定的 I 和 k ，求出 I 的最大 k 乘积。
+
+import java.util.Scanner;
+ 
+ 
+public class 最大k乘积 {
+    private static long ans;
+    private static Scanner cin;
+    static{
+        cin = new Scanner(System.in);
+    }
+    static void work(int cur, int i, int k, long v){
+        //System.out.println("i = " + i + " cur = " + cur + " k = " + k);
+        if(i == k){
+            ans = Math.max(ans, v);
+            return;
+        }
+        if(cur == 0){
+            return;
+        }
+        int MOD = 1;
+        while(cur / MOD != 0){
+            work(cur % MOD, i + 1, k, v * (cur / MOD));
+            MOD *= 10;
+        }
+    }
+    public static void main(String[] args) {
+        int num, k;
+        System.out.println("请输入数字num和要分成的段数k: ");
+        while(cin.hasNext()){
+            num = cin.nextInt();
+            k = cin.nextInt();
+            ans = Long.MIN_VALUE;
+            work(num, 0, k, 1L);
+            if(ans == Long.MIN_VALUE){
+                System.out.println("整数" + num + "不能被分成" + k + "段");
+            }else{
+                System.out.println(num + "的最大" + k + "乘积是: " + ans);
+            }
+            System.out.println("请输入数字num和要分成的段数k: ");
+        }
+    }
+}
+
+
+
+
+
+
+Leetcode 回溯法欣赏，助你发现其中套路（部分内容引自评论区）
+
+Subsets : https://leetcode.com/problems/subsets/
+
+public List<List<Integer>> subsets(int[] nums) {
+    List<List<Integer>> list = new ArrayList<>();
+    Arrays.sort(nums);
+    backtrack(list, new ArrayList<>(), nums, 0);
+    return list;
+}
+ 
+private void backtrack(List<List<Integer>> list , List<Integer> tempList, int [] nums, int start){
+    list.add(new ArrayList<>(tempList));
+    for(int i = start; i < nums.length; i++){
+        tempList.add(nums[i]);
+        backtrack(list, tempList, nums, i + 1);
+        tempList.remove(tempList.size() - 1);
+    }
+}
+
+Subsets II (contains duplicates) : https://leetcode.com/problems/subsets-ii/
+public List<List<Integer>> subsetsWithDup(int[] nums) {
+    List<List<Integer>> list = new ArrayList<>();
+    Arrays.sort(nums);
+    backtrack(list, new ArrayList<>(), nums, 0);
+    return list;
+}
+ 
+private void backtrack(List<List<Integer>> list, List<Integer> tempList, int [] nums, int start){
+    list.add(new ArrayList<>(tempList));
+    for(int i = start; i < nums.length; i++){
+        if(i > start && nums[i] == nums[i-1]) continue; // skip duplicates
+        tempList.add(nums[i]);
+        backtrack(list, tempList, nums, i + 1);
+        tempList.remove(tempList.size() - 1);
+    }
+} 
+Permutations : https://leetcode.com/problems/permutations/
+public List<List<Integer>> permute(int[] nums) {
+   List<List<Integer>> list = new ArrayList<>();
+   // Arrays.sort(nums); // not necessary
+   backtrack(list, new ArrayList<>(), nums);
+   return list;
+}
+ 
+private void backtrack(List<List<Integer>> list, List<Integer> tempList, int [] nums){
+   if(tempList.size() == nums.length){
+      list.add(new ArrayList<>(tempList));
+   } else{
+      for(int i = 0; i < nums.length; i++){ 
+         if(tempList.contains(nums[i])) continue; // element already exists, skip
+         tempList.add(nums[i]);
+         backtrack(list, tempList, nums);
+         tempList.remove(tempList.size() - 1);
+      }
+   }
+} 
+Permutations II (contains duplicates) : https://leetcode.com/problems/permutations-ii/
+public List<List<Integer>> permuteUnique(int[] nums) {
+    List<List<Integer>> list = new ArrayList<>();
+    Arrays.sort(nums);
+    backtrack(list, new ArrayList<>(), nums, new boolean[nums.length]);
+    return list;
+}
+ 
+private void backtrack(List<List<Integer>> list, List<Integer> tempList, int [] nums, boolean [] used){
+    if(tempList.size() == nums.length){
+        list.add(new ArrayList<>(tempList));
+    } else{
+        for(int i = 0; i < nums.length; i++){
+            if(used[i] || i > 0 && nums[i] == nums[i-1] && !used[i - 1]) continue;
+            used[i] = true; 
+            tempList.add(nums[i]);
+            backtrack(list, tempList, nums, used);
+            used[i] = false; 
+            tempList.remove(tempList.size() - 1);
+        }
+    }
+
+————————————————
+版权声明：本文为CSDN博主「versencoder」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/versencoder/article/details/52072350
+
+
+
+Subsets
+
+public List<List<Integer>> subsets(int[] nums) {
+		//把空集加进去
+		List<List<Integer>> result = new ArrayList<List<Integer>>();
+		result.add(new ArrayList<Integer>());
+		
+		List<Integer> item = new ArrayList<Integer>();
+		generate(result, item, nums, 0);
+		
+		return result;
+	}
+	
+	public void generate(List<List<Integer>> result,List<Integer> item, int[] nums, int i) {
+		//递归结束条件
+		if(i >= nums.length) {
+			return;
+		}
+		
+		List<Integer> tempItem = new ArrayList<Integer>(item);
+		tempItem.add(nums[i]);
+		result.add(tempItem);
+		generate(result, tempItem, nums, i + 1);
+        
+		generate(result, item, nums, i + 1);
+	}
+90. Subsets II
+public List<List<Integer>> subsetsWithDup(int[] nums) {
+		Arrays.sort(nums);
+		List<List<Integer>> result = new ArrayList<List<Integer>>();
+		result.add(new ArrayList<Integer>());
+		
+		generate(result, new ArrayList<Integer>(), new HashSet<List<Integer>>(), nums, 0);
+		
+		return result;
+	}
+	
+	public void generate(List<List<Integer>> result, List<Integer> item,
+			HashSet<List<Integer>> set, int[] nums, int i) {
+		if(i >= nums.length) {
+			return;
+		}
+		
+		List<Integer> tempItem = new ArrayList<Integer>(item);
+		tempItem.add(nums[i]);
+		if(set.add(tempItem)) {
+			result.add(tempItem);
+		}
+		generate(result, tempItem, set, nums, i + 1);
+		
+		generate(result, item, set, nums, i + 1);
+	}
+40. Combination Sum II
+public List<List<Integer>> combinationSum2(int[] nums, int target) {
+		Arrays.sort(nums);
+		List<List<Integer>> result = new ArrayList<List<Integer>>();
+		
+		generate(result, new ArrayList<Integer>(), new HashSet<List<Integer>>(), nums, target, 0, 0);
+		return result;
+	}
+	
+	public void generate(List<List<Integer>> result, List<Integer> item,
+			HashSet<List<Integer>> set, int[] nums,
+			int target, int sum, int i) {
+		
+		if(i >= nums.length || sum > target) {					//剪枝操作
+			return;
+		}
+		
+		List<Integer> tempItem = new ArrayList<Integer>(item);
+		tempItem.add(nums[i]);
+		sum += nums[i];
+		if(sum == target && set.add(tempItem)) {
+			result.add(tempItem);
+		}
+		generate(result, tempItem, set, nums, target, sum, i + 1);
+		
+		//回溯
+		sum -= nums[i];
+		generate(result, item, set, nums, target, sum, i + 1);
+	}
+
+46. Permutations
+public List<List<Integer>> permute(int[] nums) {
+        List<List<Integer>> result = new ArrayList<List<Integer>>();
+		generate(0, result, new ArrayList<Integer>(), nums);
+		return result;
+	}
+	
+	public void generate(int i, List<List<Integer>> result, List<Integer> item,
+			int[] nums) {
+		if(i == nums.length) {
+			result.add(new ArrayList<Integer>(item));
+			return;
+		}
+		
+		//i代表第i个位置,j代表第j个元素
+		for(int j = 0; j < nums.length; j++) {
+			if(item.contains(nums[j])) {
+				continue;
+			}
+			List<Integer> tempItem = new ArrayList<Integer>(item);
+			tempItem.add(i, nums[j]);
+			generate(i + 1, result, tempItem, nums);
+		}
+	}
+
+51. N-Queens
+public List<List<String>> solveNQueens(int n) {
+        List<List<String>> result = new ArrayList<List<String>>();
+		int[][] mark = new int[n][n];
+		List<String> item = new ArrayList<String>();
+		
+		for(int i = 0; i < n; i++) {						//初始化item
+			StringBuffer sb = new StringBuffer();
+			for(int j = 0; j < n; j++) {
+				sb.append(".");
+			}
+			item.add(sb.toString());
+		}
+		
+		generate(0, item, result, mark);
+		return result;
+	}
+	
+	public void putDownTheQueen(int x, int y, int[][] mark) {
+		int[] dx = {-1, -1, -1, 0, 1, 1, 1, 0};				//行
+		int[] dy = {-1, 0, 1, 1, 1, 0, -1, -1};				//列
+		
+		for(int i = 1; i < mark.length; i++) {				//最多走n - 1步
+			for(int j = 0; j < 8; j++) {					//8个方向
+				int newX = x + i * dx[j];
+				int newY = y + i * dy[j];
+				
+				if(newX >= 0 && newX < mark.length			//新坐标没有越界，标记为1
+						&& newY >= 0 && newY < mark.length) {
+					mark[newX][newY] = 1;
+				}
+			}
+		}
+	}
+	
+	public void generate(int k, List<String> item, List<List<String>> result, int[][] mark) {
+		if(k == mark.length) {
+			result.add(new ArrayList<String>(item));
+			return;
+		}
+		
+		for(int i = 0; i < mark.length; i++) {
+			if(mark[k][i] == 0) {
+				//放下皇后，并更新item和mark
+                                String tempString = item.get(k);
+				StringBuffer sb = new StringBuffer(tempString);
+				sb.setCharAt(i, 'Q');
+				item.set(k, sb.toString());
+				//备份mark
+				int[][] tempMark = new int[mark.length][mark.length];
+				
+				for(int x = 0; x < mark.length; x++) {
+					for(int y = 0; y < mark.length; y++) {
+						tempMark[x][y] = mark[x][y];
+					}
+				}
+				putDownTheQueen(k, i, tempMark);
+				//进行下一行的放置
+				generate(k + 1, item, result, tempMark);
+                item.set(k, tempString);
+			}
+		}
+	}
+————————————————
+版权声明：本文为CSDN博主「edc599」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/edc599/article/details/79390493
+
+
+
+
+
+回溯算法：
+从一条路往前走，能进则进，不能进则退回来，换一条路再试。（以深度优先方式搜索）
+回溯法是一种选优搜索法，按选优条件向前搜索，以达到目标。但当探索到某一步时，发现原先选择并不优或达不到目标，就退回一步重新选择。
+使用回溯法求任一个解时，只要搜索到问题的一个解就可以结束
+用回溯法求问题的所有解时，要回溯到根，且根结点的所有可行的子树都要已被搜索遍才结束。
+
+回溯法的实现方法有两种：递归和递推（也称迭代）。一般来说，一个问题两种方法都可以实现，只是在算法效率和设计复杂度上有区别。
+递归思路简单，设计容易，但效率低。递推算法设计相对复杂，但效率高。
+
+集合求幂集函数：
+
+public class Test{
+
+public static void main(String []args){
+
+List<String> list = new ArrayList<String>();
+
+list.add("A");
+list.add("B");
+list.add("C");
+
+List<String> li = new ArrayList<String>();
+
+print(0,list,li);
+
+}
+
+public static void print(int i, List<String> list, List<String> li){
+
+if(i > list.size()-1){
+
+System.out.println(li);
+
+}else{
+
+li.add(list.get(i)); //左子树的处理
+print(i+1,list,li); //递归遍历
+li.remove(list.get(i)); //右子树的处理
+print(i+1,list,li); //递归遍历
+
+}
+
+}
+
+}
+
+
+皇后问题：
+
+public class Test{
+
+static int max = 8; //放置几个皇后
+static int num = 0; //总共有几种存放方式
+static int[] array = new int[max]; //用数组存放皇后的摆放位置 用来判断是否摆放正确
+
+public static void main(String[] args){
+check(0); //先放第一个皇后
+System.out.println(num);
+}
+
+public static void check(int n){
+if(n == max){ //如果皇后全部摆放完成 ，总数+1 并跳出该方法
+num++;
+return;
+}
+
+for (int i = 0; i < max; i++) { //从第一列开始放，到第max列为止
+array[n] = i; //默认该皇后都是从该行的第一列开始摆放
+if (ok(n)) { //判断该皇后的摆放位置是否正确
+check(n + 1); //如果正确，则递归下一个皇后的摆放
+}
+}
+
+}
+
+private boolean ok(int n) {
+for (int i = 0; i < n; i++) { //从第一列开始放值，然后判断是否和本行本列本斜线有冲突，如果OK，就进入下一行的逻辑
+//array[i] == array[n] 判断是否在同一斜线上
+//Math.abs(n - i) == Math.abs(array[n] - array[i]) 判断是否在同一行或列
+if (array[i] == array[n] || Math.abs(n - i) == Math.abs(array[n] - array[i])) {
+return false;
+}
+}
+return true;
+}
+
+}
